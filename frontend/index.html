@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe SQL AI Chat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Safe SQL AI</h1>
+            <p>Pregúntale a tu base de datos en lenguaje natural. Respaldado por Hugging Face `smolagents` y nuestro SQL Guard.</p>
+        </header>
+
+        <main id="chat-container">
+            <div class="message-list" id="message-list">
+                <div class="message bot">
+                    <div class="bubble">
+                        Hola, soy tu asistente de base de datos seguro. Pregúntame sobre ventas y clientes.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="question-input" placeholder="Ej: ¿Cuál es el cliente con el monto más alto en ventas?" autocomplete="off">
+                <button id="send-btn">Enviar</button>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
