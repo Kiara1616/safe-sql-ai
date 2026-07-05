@@ -1,47 +1,62 @@
-# Text-to-SQL AI Database Solutions (Safe SQL Agent)
+# Text-to-SQL AI Database Solutions (Safe SQL Agent - Enterprise)
 
-Este proyecto es un entorno reproducible ("Laboratorio") para probar arquitecturas Text-to-SQL seguras. Se centra en la implementación de un agente de IA que interactúa con bases de datos SQL (inspirado en `smolagents` de Hugging Face), incorporando una capa robusta de validación para evitar inyecciones y operaciones destructivas.
+Este proyecto es un entorno reproducible ("Laboratorio") para probar arquitecturas Text-to-SQL seguras. En su iteración actual (Fase 2.5), se ha evolucionado de un simple script de consola a una **Aplicación Web Full-Stack Multi-IA**.
 
-## Arquitectura
+El núcleo del proyecto es un agente de IA que interactúa con bases de datos SQL, protegido por un **SQL Guard** determinista que intercepta y bloquea consultas destructivas antes de que toquen la base de datos.
 
-- **Base de Datos**: SQLite (en memoria o archivo local).
-- **Backend / Orquestación**: Python nativo.
-- **Framework de Agentes**: `smolagents` de Hugging Face (CodeAgent compatible).
-- **Seguridad (SQL Guard)**: Interceptor de consultas (`validator.py`) para garantizar operaciones seguras.
-- **Inicialización**: Scripts Python (`db.py`) sobre archivos `.sql` puros para definir esquemas y cargar datos semilla.
+## 🚀 Novedades (Fase 2.5)
+- **Interfaz Web (Studio):** Una UI moderna (HTML/CSS/JS puros) con diseño "Glassmorphism" que muestra el mensaje natural de la IA, el código SQL exacto que generó, y una tabla HTML con los datos crudos resultantes.
+- **Multi-Proveedor de IA:** Soporte dinámico para Hugging Face (`Qwen2.5-Coder`), OpenAI (`GPT-4o-Mini`) y DeepSeek (`DeepSeek-Chat`) a través de `litellm`.
+- **Modo Mock (Demo sin costo):** Capacidad de probar el flujo de la aplicación de manera local, recibiendo respuestas simuladas, sin consumir tokens ni internet.
+- **Backend Robusto:** API impulsada por `FastAPI` y estructuración modular del código (`src`, `config`, `migrations`).
 
-## Características Principales (Fase Actual)
+## ⚙️ Arquitectura
+1. **Frontend:** HTML/CSS/JS (Vanilla).
+2. **Backend:** Python (FastAPI, Uvicorn, smolagents, litellm).
+3. **Seguridad (SQL Guard):** Script determinista que obliga a usar solo sentencias `SELECT` no encadenadas.
+4. **Base de Datos:** SQLite (`safe_sql_demo.db`).
 
-- **Agente Basado en Código**: En lugar de depender de un simple prompt estático, el flujo permite que el orquestador razone sobre la base de datos (Pensar -> Actuar -> Observar -> Responder), dándole la capacidad de autocorregirse ante errores de sintaxis SQL.
-- **Seguridad Interceptiva**: La aplicación (`app.py`) ilustra de manera directa la diferencia entre una consulta SQL válida (aprobada por el validador) y una destructiva (interceptada y bloqueada).
-- **Transparencia**: Todo el flujo (pregunta del usuario, SQL generado y resultado de validación) se muestra en consola.
+## 🛠️ Instalación y Configuración
 
-## Seguridad (SQL Guard)
+Para utilizar este proyecto en tu máquina local, sigue estos pasos:
 
-El sistema incorpora un mecanismo de seguridad estricto (`validator.py`) que:
-- Bloquea explícitamente consultas de modificación (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`).
-- Asegura que todas las sentencias sean de tipo solo lectura (`SELECT`).
-- Previene inyección múltiple bloqueando sentencias encadenadas por punto y coma (`;`).
+### 1. Clonar el repositorio y dependencias
+```bash
+# Clona este repositorio
+git clone https://github.com/KiaaraZM/safe-sql-ai.git
+cd safe-sql-ai
 
-## Instalación y Ejecución
+# Instala las dependencias
+pip install -r requirements.txt
+```
 
-1. Asegúrate de estar en el directorio correcto y con tu entorno virtual activo si aplica.
-2. Instala las dependencias necesarias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Inicializa la base de datos y sus datos de prueba:
-   ```bash
-   python db.py
-   ```
-4. Ejecuta la demostración interactiva:
-   ```bash
-   python app.py
-   ```
+### 2. Configurar los Tokens de IA (Importante)
+Por seguridad, la interfaz web no te pedirá los tokens. Debes crear un archivo llamado `.env` en la raíz del proyecto y agregar las claves de los proveedores que desees utilizar:
 
-## Próximos Pasos (Futuro)
+```env
+# Agrega el token de Hugging Face si vas a usar Qwen2.5
+HF_TOKEN=tu_token_aqui
 
-- **Historial y Observabilidad**: Creación de una tabla `query_logs` para registrar métricas de latencia, cantidad de filas devueltas, éxito/falla y consultas en crudo.
-- **Soporte Multi-Proveedor**: Integración profunda con modelos OpenAI, DeepSeek y Gemini.
-- **Interfaz Web (Chat UI)**: Incorporar un frontend ligero para conversar directamente con el agente sin usar la terminal.
-- **Limitación de Filas Inteligente**: Inyección automática de `LIMIT 20` (o similar) en las consultas aprobadas.
+# Agrega si vas a usar OpenAI
+OPENAI_API_KEY=tu_token_aqui
+
+# Agrega si vas a usar DeepSeek
+DEEPSEEK_API_KEY=tu_token_aqui
+```
+*(Nota: Si solo vas a usar el "Modo Mock", no necesitas configurar ningún token).*
+
+### 3. Inicializar la Base de Datos
+Ejecuta las migraciones para crear las tablas `customers` y `sales`, y poblar la base de datos de ejemplo:
+```bash
+python scripts/run_migrations.py
+```
+
+### 4. Ejecutar el Servidor Web
+Levanta el backend de FastAPI:
+```bash
+uvicorn src.main:app --port 8080
+```
+Finalmente, abre **http://localhost:8080** en tu navegador para empezar a chatear con la base de datos.
+
+## 🔒 Seguridad (SQL Guard)
+El archivo `src/validator.py` bloquea cualquier instrucción como `DROP`, `DELETE`, `UPDATE`, `INSERT` o `ALTER`. Ante un intento de modificación (incluso inyecciones en subconsultas o sentencias separadas por `;`), el validador abortará la operación antes de que llegue al motor SQLite.
