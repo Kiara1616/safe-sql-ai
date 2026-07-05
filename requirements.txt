@@ -1,2 +1,4 @@
 smolagents==1.0.0
 huggingface-hub
+sqlalchemy
+python-dotenv
